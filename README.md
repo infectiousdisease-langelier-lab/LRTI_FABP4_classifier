@@ -10,6 +10,8 @@ For testing the performance of FABP4 as a biomarker, the pediatric samples and t
 
 ## Code
 
+FABP4_classifier.R: code used to analyze data and produce figures.
+
 ## SessionInfo
 
 ```
