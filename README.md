@@ -2,15 +2,23 @@ This is the repository for testing the gene FABP4 as an age-agnostic biomarker f
 
 ## Methods
 
-The gene count and metadata files of the pediatric samples were downloaded from NCBI GEO accession number GSE212532 (1). The gene count and metadata files are available in the folder `adult_count` (2). Alignment was performed using kallisto (3) against the protein-coding and lncRNA transcripts from the human referece genome (Ensembl 99 release). The adult samples have been filtered to remove samples with proportion of rRNA lower than 80%.
+### Data preprocessing
 
-For differential expression analysis of the pediatric samples, we compared `Definite` samples against `No Evidence` samples without any additional covariates. We filtered for genes with at least 10 counts in at least 20% of the samples, and used the limma package (v3.58.1) (4,5) for differential expression testing. P-values were adjusted with Benjamini-Hochberg correction.
+The gene count and metadata files of the pediatric samples were downloaded from NCBI GEO accession number [GSE212532](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE212532) (1). The gene count and metadata files are available in the folder [adult_count](adult_count) (2). Alignment was performed using kallisto (3) against the protein-coding and lncRNA transcripts from the human referece genome (Ensembl 99 release). The adult samples have been filtered to remove samples with proportion of rRNA lower than 80%.
 
-For testing the performance of FABP4 as a biomarker, the pediatric samples and the adult samples were analyzed separately. For each sample type, we randomly split the samples into 5 folds, such that the number of LRTI and non-LRTI samples are roughly equal across all 5 folds. Next, for each test fold, we filtered for genes with at least 10 counts in at least 20% of the training folds' samples, and normalized the gene counts with `varianceStabilizingTransformation` (DESeq2 package v1.42.0) (6). For each test fold, the performance of FABP4 was calculated using the package pROC (v1.18.5) (7). The reported area under the receiver operating characteristic curve was calculated from the mean and standard deviation of the 5 AUCs. The mean ROC curve was calculated as the mean of 5 interpolated RUC curves, one for each test fold.
+For differential expression analysis of the pediatric samples, we compared `Definite` samples (those with LRTI) against `No Evidence` samples (those without LRTI) without any additional covariates (w.r.t. the metadata file in the [adult_count](adult_count) folder, LRTI=1 means `Definite`, 0 means `No Evidence`). We filtered for genes with at least 10 counts in at least 20% of the samples, and used the limma package (v3.58.1) (4,5) for differential expression testing. P-values were adjusted with Benjamini-Hochberg correction.
+
+### Data analysis
+
+For testing the performance of FABP4 as a biomarker for LRTI, the pediatric samples and the adult samples were analyzed separately. For each sample type, we randomly split the samples into 5 folds, such that the number of `Definite` and `No Evidence` samples are roughly equal across all 5 folds. Next, for each test fold, we filtered for genes with at least 10 counts in at least 20% of the training folds' samples, and normalized the gene counts with `varianceStabilizingTransformation()` (DESeq2 package v1.42.0) (6). (More details on the normalization step is provided in the next subsection.) For each test fold, the performance of FABP4 was calculated using the function `roc` from the pROC package (v1.18.5) (7). The reported area under the receiver operating characteristic curve was calculated from the mean and standard deviation of the 5 AUCs. The mean ROC curve was calculated as the mean of 5 interpolated RUC curves, one for each test fold.
+
+### FABP4 gene expression normalization
+
+For each of the 5 folds, FABP4 gene expression level was normalized using the DESeq2 package. First, we filtered for genes with at least 10 counts in at least 20% of the training samples. Next, we calculated the training samples' size factors and dispersions with the function `estimateSizeFactors()` and `estimateDispersions()`, respectively. Third, we normalized the training samples' gene expression with the function `varianceStabilizingTransformation()`, rounded to two decimal places. For the test samples, we calculated their size factors, but set their dispersions to be equal to the training samples' dispersions. Then, we normalized the test samples' gene expression with `varianceStabilizingTransformation(blind=FALSE)` (so that the function used the preset dispersions), also rounded to two decimal places. The normalized FABP4 gene expression is directly used as input to the pROC package.
 
 ## Code
 
-FABP4_classifier.R: code used to analyze data and produce figures.
+FABP4_classifier.R: code used to analyze data and produce figures. Based on `code/20240124_FABP4_classifier.R`.
 
 ## SessionInfo
 

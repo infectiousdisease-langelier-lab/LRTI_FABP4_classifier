@@ -176,80 +176,6 @@ print(cv.folds %>%
         group_by(fold) %>%
         dplyr::count(batch))
 
-## 5-fold CV logistic regression with VST -----
-# Follows https://stackoverflow.com/a/56525428 and https://daviddalpiaz.github.io/r4sl/logistic-regression.html#roc-curves
-
-# Get ensembl ID of FABP4
-gene.id <- rownames(gene.symbol %>% subset(gene_symbol=="FABP4"))
-
-# For saving predicted probability and predicted class
-cv.folds$prob <- NaN
-cv.folds$pred <- ""
-# For storing ROC results
-fold.roc <- list()
-for (k in c(1:5)) {
-  test.fold <- cv.folds[cv.folds$fold==k,]
-  train.folds <- cv.folds[cv.folds$fold!=k,]
-  
-  # Train data
-  counts.train <- counts.all[,train.folds$patient_id]
-  keep.train <- rowSums(counts.train>=10) >= (0.2*ncol(counts.train))
-  dds.train <- DESeqDataSetFromMatrix(
-    countData = counts.train[keep.train,],
-    colData = train.folds,
-    design = ~1)
-  dds.train <- estimateSizeFactors(dds.train)
-  dds.train <- estimateDispersions(dds.train)
-  vsd.train <- varianceStabilizingTransformation(dds.train) %>% 
-    assay %>% 
-    round(., digits=2)
-  # Add FABP4 expression
-  train.folds$FABP4 <- vsd.train[gene.id,]
-  
-  # Test data
-  counts.test <- counts.all[,test.fold$patient_id]
-  dds.test <- DESeqDataSetFromMatrix(
-    countData = counts.test[keep.train,],
-    colData = test.fold,
-    design = ~1)
-  dds.test <- estimateSizeFactors(dds.test)
-  dispersionFunction(dds.test) <- dispersionFunction(dds.train) # assign the dispersion function from the training data alone
-  vsd.test <- varianceStabilizingTransformation(dds.test, blind=FALSE) %>% 
-    assay %>% 
-    round(., digits=2)
-  # Add FABP4 expression
-  test.fold$FABP4 <- vsd.test[gene.id,]
-  
-  mod.fit <- glm(
-    LRTI ~ FABP4,
-    data=train.folds, family="binomial")
-  
-  test.fold$prob <- predict(
-    mod.fit, newdata=test.fold, type="response")
-  test.fold$pred <- ifelse(
-    test.fold$prob>0.5, "1", "0")
-  cv.folds[match(test.fold$patient_id,cv.folds$patient_id),"prob"] <- test.fold$prob
-  cv.folds[match(test.fold$patient_id,cv.folds$patient_id),"pred"] <- test.fold$pred
-  
-  fold.roc[[k]] <- pROC::roc(
-    test.fold$LRTI ~ test.fold$prob,
-    levels=c("0","1"),
-    direction="<",
-    plot=TRUE, print.auc=TRUE)
-  print(sprintf(
-    "Fold %d AUC: %.3f", k, fold.roc[[k]]$auc))
-}
-
-# Get the list of AUCs
-fold.auc <- unlist(lapply(
-  fold.roc,
-  FUN=function(x) x$auc))
-
-# Mean
-print(mean(fold.auc))
-# SD
-print(sd(fold.auc))
-
 ## 5-fold CV direct ROC with VST -----
 # Follows https://stackoverflow.com/a/56525428 and https://daviddalpiaz.github.io/r4sl/logistic-regression.html#roc-curves
 
@@ -294,17 +220,6 @@ for (k in c(1:5)) {
     round(., digits=2)
   # Add FABP4 expression
   test.fold$FABP4 <- vsd.test[gene.id,]
-  
-  # mod.fit <- glm(
-  #   LRTI ~ FABP4,
-  #   data=train.folds, family="binomial")
-  # 
-  # test.fold$prob <- predict(
-  #   mod.fit, newdata=test.fold, type="response")
-  # test.fold$pred <- ifelse(
-  #   test.fold$prob>0.5, "1", "0")
-  # cv.folds[match(test.fold$patient_id,cv.folds$patient_id),"prob"] <- test.fold$prob
-  # cv.folds[match(test.fold$patient_id,cv.folds$patient_id),"pred"] <- test.fold$pred
   
   fold.roc[[k]] <- pROC::roc(
     test.fold$LRTI ~ test.fold$FABP4,
@@ -394,78 +309,6 @@ while (TRUE) {
   }
 }
 
-## 5-fold CV logistic regression with VST -----
-# Get ensembl ID of FABP4
-gene.id <- rownames(gene.symbol %>% subset(gene_symbol=="FABP4"))
-
-# For saving predicted probability and predicted class
-cv.folds.ped$prob <- NaN
-cv.folds.ped$pred <- ""
-# For storing ROC results
-fold.roc.ped <- list()
-for (k in c(1:5)) {
-  test.fold <- cv.folds.ped[cv.folds.ped$fold==k,]
-  train.folds <- cv.folds.ped[cv.folds.ped$fold!=k,]
-  
-  # Train data
-  counts.train <- counts.ped[,train.folds$sample_name]
-  keep.train <- rowSums(counts.train>=10) >= (0.2*ncol(counts.train))
-  dds.train <- DESeqDataSetFromMatrix(
-    countData = counts.train[keep.train,],
-    colData = train.folds,
-    design = ~1)
-  dds.train <- estimateSizeFactors(dds.train)
-  dds.train <- estimateDispersions(dds.train)
-  vsd.train <- varianceStabilizingTransformation(dds.train) %>% 
-    assay %>% 
-    round(., digits=2)
-  # Add FABP4 expression
-  train.folds$FABP4 <- vsd.train[gene.id,]
-  
-  # Test data
-  counts.test <- counts.ped[,test.fold$sample_name]
-  dds.test <- DESeqDataSetFromMatrix(
-    countData = counts.test[keep.train,],
-    colData = test.fold,
-    design = ~1)
-  dds.test <- estimateSizeFactors(dds.test)
-  dispersionFunction(dds.test) <- dispersionFunction(dds.train) # assign the dispersion function from the training data alone
-  vsd.test <- varianceStabilizingTransformation(dds.test, blind=FALSE) %>% 
-    assay %>% 
-    round(., digits=2)
-  # Add FABP4 expression
-  test.fold$FABP4 <- vsd.test[gene.id,]
-  
-  mod.fit <- glm(
-    LRTI ~ FABP4,
-    data=train.folds, family="binomial")
-  
-  test.fold$prob <- predict(
-    mod.fit, newdata=test.fold, type="response")
-  test.fold$pred <- ifelse(
-    test.fold$prob>0.5, "1", "0")
-  cv.folds.ped[match(test.fold$sample_name,cv.folds.ped$sample_name),"prob"] <- test.fold$prob
-  cv.folds.ped[match(test.fold$sample_name,cv.folds.ped$sample_name),"pred"] <- test.fold$pred
-  
-  fold.roc.ped[[k]] <- pROC::roc(
-    test.fold$LRTI ~ test.fold$prob,
-    levels=c("0","1"),
-    direction="<",
-    plot=TRUE, print.auc=TRUE)
-  print(sprintf(
-    "Fold %d AUC: %.3f", k, fold.roc.ped[[k]]$auc))
-}
-
-# Get the list of AUCs
-fold.auc.ped <- unlist(lapply(
-  fold.roc.ped,
-  FUN=function(x) x$auc))
-
-# Mean
-print(mean(fold.auc.ped))
-# SD
-print(sd(fold.auc.ped))
-
 ## 5-fold CV direct ROC with VST -----
 # Get ensembl ID of FABP4
 gene.id <- rownames(gene.symbol %>% subset(gene_symbol=="FABP4"))
@@ -508,17 +351,6 @@ for (k in c(1:5)) {
     round(., digits=2)
   # Add FABP4 expression
   test.fold$FABP4 <- vsd.test[gene.id,]
-  
-  # mod.fit <- glm(
-  #   LRTI ~ FABP4,
-  #   data=train.folds, family="binomial")
-  # 
-  # test.fold$prob <- predict(
-  #   mod.fit, newdata=test.fold, type="response")
-  # test.fold$pred <- ifelse(
-  #   test.fold$prob>0.5, "1", "0")
-  # cv.folds.ped[match(test.fold$sample_name,cv.folds.ped$sample_name),"prob"] <- test.fold$prob
-  # cv.folds.ped[match(test.fold$sample_name,cv.folds.ped$sample_name),"pred"] <- test.fold$pred
   
   fold.roc.ped[[k]] <- pROC::roc(
     test.fold$LRTI ~ test.fold$FABP4,
