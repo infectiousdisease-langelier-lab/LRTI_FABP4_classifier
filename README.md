@@ -8,7 +8,7 @@ The gene count and metadata files of the pediatric samples were downloaded from 
 
 ### Data analysis
 
-All analyses were performed in R (v4.3.2).
+All analyses were performed in R (v4.3.2), and can be reproduced with the code [FABP4_classifier.R](FABP4_classifier.R).
 
 Differential expression (DE) analysis and five-fold cross-validation of FABP4 as a biomarker for LRTI were performed similarly for both pediatric and adult cohorts. We were interested in comparing `Definite` samples (those with LRTI) against `No Evidence` samples (those without LRTI). In the metadata file in the [adult_count](adult_count) folder, LRTI=1 means `Definite`, 0 means `No Evidence`. 
 
@@ -22,7 +22,9 @@ For each of the 5 folds, FABP4 gene expression level was normalized using the DE
 
 ## Code
 
-FABP4_classifier.R: code used to analyze data and produce figures. Based on `code/20240124_FABP4_classifier.R`.
+FABP4_classifier.R: code used to analyze data and produce the figures.
+* Figure 1A: `volcano_children.png`
+* Figure 1B: `mean_roc.svg`
 
 ## SessionInfo
 
