@@ -1,4 +1,8 @@
+# Pulmonary FABP4 is an inverse biomarker of pneumonia in critically ill children and adults
+
 This is the repository for testing the gene *FABP4* as an age-agnostic inverse-biomarker for distinguishing lower respiratory tract infection (LRTI) from non-LRTI.
+
+Preprint: https://www.medrxiv.org/content/10.1101/2024.08.19.24312242v1
 
 ## Methods
 
@@ -12,7 +16,9 @@ All analyses were performed in R (v4.3.2), and can be reproduced with the code [
 
 For DE analysis, we compared "Definite" (those with LRTI) against "No Evidence" (those without LRTI) patients. First, we filtered for genes with at least 10 counts in at least 20% of the samples. We then performed DE testing with the limma-voom procedure (with `normalize.method="quantile"`) from the limma package (v3.58.1) (4,5). We did not take into account any covariates in the pediatric analysis, but we did control for batch number in the adult analysis. P-values were adjusted with Benjamini-Hochberg correction. The DE results for the pediatric and adult cohorts are available in [DE_children.csv](DE_children.csv) and [DE_adults.csv](DE_adults.csv), respectively.
 
-To test the performance of *FABP4* as a biomarker for LRTI, we applied five-fold cross-validation separately on the pediatric samples and the adult samples. For each cohort, we randomly split the samples into five folds, such that the number of "Definite" and "No Evidence" samples are roughly equal across all 5 folds. Next, for each test fold, we filtered for genes with at least 10 counts in at least 20% of the training folds' samples, and normalized the gene counts with `varianceStabilizingTransformation()` (DESeq2 package v1.42.0) (6). (More details on the normalization step is provided [below](#normalization-of-fabp4-gene-expression).) For each test fold, the performance of *FABP4* was calculated using the function `roc()` from the pROC package (v1.18.5) (7). The reported area under the receiver operating characteristic curve was calculated from the mean and standard deviation of the 5 corresponding area under the curve values. The mean ROC curve was calculated from five linearly interpolated ROC curves, one for each test fold.
+To test the performance of *FABP4* as a biomarker for LRTI, we applied five-fold cross-validation separately on the pediatric samples and the adult samples. For each cohort, we randomly split the samples into five folds, such that the number of "Definite" and "No Evidence" samples are roughly equal across all 5 folds. Next, for each test fold, we filtered for genes with at least 10 counts in at least 20% of the training folds' samples, and normalized the gene counts with `varianceStabilizingTransformation()` (DESeq2 package v1.42.0) (6). (More details on the normalization step is provided [below](#normalization-of-fabp4-gene-expression).) For each test fold, the performance of *FABP4* as a biomarker was calculated using the function `roc()` from the pROC package (v1.18.5) (7). The sensitivity and specificity at the Youden's index was extracted using the `coords()` function from the pROC package.
+
+The reported area under the receiver operating characteristic curve was calculated from the mean and standard deviation of the 5 corresponding area under the curve values. The mean ROC curve was calculated from five linearly interpolated ROC curves, one for each test fold.
 
 ### Normalization of *FABP4* gene expression
 
