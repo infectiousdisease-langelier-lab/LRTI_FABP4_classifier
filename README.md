@@ -2,6 +2,7 @@
 
 This is the repository for testing the gene *FABP4* as an age-agnostic inverse-biomarker for distinguishing lower respiratory tract infection (LRTI) from non-LRTI.
 
+Paper: https://www.atsjournals.org/doi/abs/10.1164/rccm.202403-0516RL<br>
 Preprint: https://www.medrxiv.org/content/10.1101/2024.08.19.24312242v1
 
 ## Methods
